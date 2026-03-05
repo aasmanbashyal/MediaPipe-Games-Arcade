@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Shadow Puppets — Advik's Games</title>
+    <meta name="description" content="Match hand gestures to silhouettes using hand tracking AI!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/game-base.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="game.js"></script>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="rotate-overlay">
+            <div class="rotate-icon">📱</div>
+            <p class="rotate-text">Rotate to landscape</p>
+            <p class="rotate-subtext">This game is designed for landscape mode</p>
+        </div>
+        <div id="miniViewContainer">
+            <video id="webcamView" autoplay playsinline></video>
+            <canvas id="miniCanvas"></canvas>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hudOverlay" class="hud-layer" style="display: none;">
+            <div id="scoreBox"><span class="score-label">SCORE</span><span id="scoreDisplay">0</span></div>
+            <div id="comboBox"><span class="combo-prefix">x</span><span id="comboDisplay">0</span><span
+                    class="combo-label">STREAK</span></div>
+            <div id="roundBox"><span id="roundDisplay">1 / 10</span></div>
+            <div id="timerBar">
+                <div id="timerFill"></div>
+            </div>
+            <div id="gestureTarget"></div>
+            <div id="matchFeedback"></div>
+        </div>
+
+        <!-- Menu -->
+        <div id="uiOverlay" class="ui-layer">
+            <div class="ui-content">
+                <a href="../../index.html" class="back-link">← BACK TO ARCADE</a>
+                <h1 id="screenTitle">SHADOW PUPPETS</h1>
+                <p class="tagline" id="taglineText">Match the gesture with your hand</p>
+                <div class="difficulty-select" id="diffSelect">
+                    <button class="diff-card" data-diff="easy"><span class="diff-icon">✋</span><span
+                            class="diff-name">Easy</span><span class="diff-desc">5 sec · Simple gestures</span></button>
+                    <button class="diff-card" data-diff="hard"><span class="diff-icon">🤟</span><span
+                            class="diff-name">Hard</span><span class="diff-desc">3 sec · All gestures</span></button>
+                </div>
+                <div id="resultsPanel" style="display: none;">
+                    <div class="result-row"><span class="result-label">Score</span><span id="finalScore"
+                            class="result-value">0</span></div>
+                    <div class="result-row"><span class="result-label">Matched</span><span id="finalMatched"
+                            class="result-value">0</span></div>
+                    <div class="result-row"><span class="result-label">Best Streak</span><span id="finalStreak"
+                            class="result-value">0</span></div>
+                    <button id="playAgainBtn" class="play-again-btn">PLAY AGAIN</button>
+                </div>
+                <p id="statusText" class="status-text">Loading AI...</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

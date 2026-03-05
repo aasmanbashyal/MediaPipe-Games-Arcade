@@ -1,0 +1,197 @@
+/* ============================================
+   REACTION DUEL — Game-Specific Styles
+   Base styles loaded from ../../shared/game-base.css
+   ============================================ */
+
+@keyframes targetPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+    }
+}
+
+@keyframes popResult {
+    0% {
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.15);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* ---- Reaction Duel overrides ---- */
+#miniViewContainer {
+    border-color: rgba(255, 235, 59, 0.4);
+    box-shadow: 0 0 30px rgba(255, 235, 59, 0.2);
+}
+
+.back-link:hover {
+    color: #ffeb3b;
+}
+
+h1#screenTitle {
+    background: linear-gradient(135deg, #ffeb3b, #ff6ec7, #00e5ff);
+}
+
+.mode-card {
+    --card-rgb: 255, 235, 59;
+}
+
+.mode-card:last-child {
+    --card-rgb: 255, 110, 199;
+}
+
+/* ---- Round Info ---- */
+.round-info {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+}
+
+/* ---- Wins Display ---- */
+.wins-display {
+    position: absolute;
+    top: 30px;
+    font-size: 4rem;
+    font-weight: 900;
+}
+
+.left-wins {
+    left: 50px;
+    color: #ff6ec7;
+}
+
+.right-wins {
+    right: 50px;
+    color: #00e5ff;
+}
+
+/* ---- Center Message ---- */
+.center-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ffeb3b, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: popResult 0.5s ease-out;
+}
+
+/* ---- Reaction Time ---- */
+.reaction-time {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #00e5ff;
+    text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+/* ---- Stats ---- */
+.stats-block {
+    margin: 20px 0;
+}
+
+.stats-block .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stats-block .result-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+}
+
+.stats-block .result-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #ffeb3b;
+}
+
+.play-again-btn {
+    background: linear-gradient(135deg, rgba(255, 235, 59, 0.3), rgba(255, 110, 199, 0.3));
+    border-color: rgba(255, 235, 59, 0.5);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.3);
+}
+
+.play-again-btn:hover {
+    box-shadow: 0 0 35px rgba(255, 235, 59, 0.5);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    .round-info {
+        font-size: 0.8rem;
+        top: 12px;
+        letter-spacing: 2px;
+    }
+
+    .wins-display {
+        font-size: 2.5rem;
+        top: 16px;
+    }
+
+    .left-wins {
+        left: 20px;
+    }
+
+    .right-wins {
+        right: 20px;
+    }
+
+    .center-msg {
+        font-size: 2.2rem;
+        letter-spacing: 4px;
+    }
+
+    .reaction-time {
+        font-size: 1.4rem;
+        bottom: 12%;
+    }
+
+    .stats-block .result-value {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .wins-display {
+        font-size: 2rem;
+    }
+
+    .center-msg {
+        font-size: 1.8rem;
+    }
+}

@@ -1,0 +1,750 @@
+/* ============================================
+   MEDIAGAMES — Shared Game Base Styles
+   Common styles used across all games.
+   ============================================ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
+}
+
+@keyframes cardGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(var(--card-rgb), 0.3), inset 0 0 20px rgba(var(--card-rgb), 0.05);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(var(--card-rgb), 0.5), inset 0 0 30px rgba(var(--card-rgb), 0.1);
+    }
+}
+
+@keyframes bgShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,
+html {
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    background: #050510;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Rotate Overlay (portrait on touch devices) ---- */
+.rotate-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #050510;
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px;
+    text-align: center;
+}
+
+.rotate-icon {
+    font-size: 3.5rem;
+    animation: rotateHint 2s ease-in-out infinite;
+}
+
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    40% { transform: rotate(90deg); }
+    60% { transform: rotate(90deg); }
+}
+
+.rotate-text {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.rotate-subtext {
+    font-size: clamp(0.75rem, 2.5vw, 0.95rem);
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+}
+
+@media (orientation: portrait) and (pointer: coarse) {
+    .rotate-overlay {
+        display: flex;
+    }
+}
+
+/* ---- Game Container ---- */
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    background: linear-gradient(135deg, #080818 0%, #0a0520 30%, #120828 60%, #050510 100%);
+    background-size: 400% 400%;
+    animation: bgShift 20s ease-in-out infinite;
+}
+
+/* ---- Canvas ---- */
+#gameCanvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scaleX(-1);
+    width: min(100vw, calc(100dvh * (16 / 9)));
+    height: min(100dvh, calc(100vw * (9 / 16)));
+    z-index: 2;
+    pointer-events: none;
+}
+
+#miniViewContainer {
+    position: absolute;
+    /* Always stay inside the letterboxed/pillarboxed canvas area */
+    right: max(
+        max(12px, env(safe-area-inset-right)),
+        calc(50vw - min(50vw, 50dvh * 16 / 9) + 12px)
+    );
+    bottom: max(
+        max(12px, env(safe-area-inset-bottom)),
+        calc(50dvh - min(50dvh, 50vw * 9 / 16) + 12px)
+    );
+    width: clamp(100px, 16vw, 200px);
+    aspect-ratio: 16 / 9;
+    z-index: 1000;
+    border: 2px solid rgba(0, 229, 255, 0.4);
+    border-radius: clamp(8px, 1.2vw, 16px);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+    background: #000;
+}
+
+#webcamView,
+#miniCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+#miniCanvas {
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* ---- UI Overlay ---- */
+.ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at center, rgba(15, 5, 30, 0.92) 0%, rgba(5, 5, 16, 0.97) 100%);
+    transition: opacity 0.4s ease;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.ui-content {
+    text-align: center;
+    max-width: 700px;
+    padding: 40px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    letter-spacing: 2px;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: #00e5ff;
+}
+
+h1#screenTitle {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    background: linear-gradient(135deg, #ff6ec7, #7b61ff, #00e5ff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.tagline {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+}
+
+.status-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-top: 30px;
+    letter-spacing: 1px;
+}
+
+/* ---- HUD ---- */
+.hud-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* ---- Results ---- */
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.result-label {
+    font-size: 1rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.result-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00e5ff, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ---- Winner Text ---- */
+.winner-text {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, #ffeb3b, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+}
+
+/* ---- Play Again Button ---- */
+.play-again-btn {
+    margin-top: 30px;
+    padding: 16px 50px;
+    min-height: 52px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(123, 97, 255, 0.3), rgba(255, 110, 199, 0.3));
+    border: 2px solid rgba(123, 97, 255, 0.5);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(123, 97, 255, 0.3);
+    touch-action: manipulation;
+}
+
+.play-again-btn:hover {
+    transform: scale(1.05);
+    border-color: rgba(123, 97, 255, 0.8);
+    box-shadow: 0 0 35px rgba(123, 97, 255, 0.5);
+}
+
+/* ---- Mode / Difficulty Select Cards ---- */
+.mode-select,
+.difficulty-select,
+.level-select {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.mode-card,
+.diff-card,
+.level-card {
+    --card-rgb: 123, 97, 255;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 30px 36px;
+    min-height: 52px;
+    border: 2px solid rgba(var(--card-rgb), 0.4);
+    border-radius: 20px;
+    background: rgba(var(--card-rgb), 0.08);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cardGlow 3s ease-in-out infinite;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    touch-action: manipulation;
+}
+
+.mode-card:hover,
+.diff-card:hover,
+.level-card:hover {
+    transform: translateY(-6px) scale(1.04);
+    border-color: rgba(var(--card-rgb), 0.8);
+    background: rgba(var(--card-rgb), 0.15);
+}
+
+.mode-card:active,
+.diff-card:active,
+.level-card:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.mode-icon,
+.diff-icon {
+    font-size: 2.5rem;
+}
+
+.level-icon {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+}
+
+.mode-name,
+.diff-name,
+.level-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mode-desc,
+.diff-desc,
+.level-desc {
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- Score & Combo (shared across multiple games) ---- */
+#scoreBox {
+    position: absolute;
+    top: 24px;
+    left: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.score-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+}
+
+#scoreDisplay {
+    font-size: 2.4rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff, #ccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#comboBox {
+    position: absolute;
+    top: 18px;
+    right: 30px;
+    text-align: right;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.combo-prefix {
+    font-size: 2rem;
+    font-weight: 300;
+    background: linear-gradient(135deg, #00e5ff, #7b61ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#comboDisplay {
+    font-size: 5rem;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #00e5ff, #7b61ff, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.combo-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg, #ff6ec7, #7b61ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: uppercase;
+}
+
+/* ---- Flash Effect ---- */
+.flash-red {
+    box-shadow: inset 0 0 120px rgba(255, 50, 80, 0.4) !important;
+}
+
+/* ============================================
+   RESPONSIVE — Tablet & Mobile
+   ============================================ */
+
+/* ---- Tablet (portrait) ---- */
+@media (max-width: 768px) {
+    #miniViewContainer {
+        /* width handled by clamp() */
+    }
+
+    h1#screenTitle {
+        font-size: 2.8rem;
+        letter-spacing: 4px;
+    }
+
+    .tagline {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        margin-bottom: 28px;
+    }
+
+    .ui-content {
+        padding: 30px 20px;
+        max-width: 100%;
+    }
+
+    .mode-card,
+    .diff-card,
+    .level-card {
+        padding: 22px 28px;
+    }
+
+    .mode-name,
+    .diff-name,
+    .level-name {
+        font-size: 1.2rem;
+    }
+
+    .play-again-btn {
+        padding: 14px 36px;
+        font-size: 1rem;
+        letter-spacing: 2px;
+    }
+
+    #scoreDisplay {
+        font-size: 1.8rem;
+    }
+
+    #comboDisplay {
+        font-size: 3.5rem;
+    }
+
+    .combo-prefix {
+        font-size: 1.5rem;
+    }
+
+    .combo-label {
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+    }
+
+    #scoreBox {
+        top: 16px;
+        left: 16px;
+    }
+
+    #comboBox {
+        top: 12px;
+        right: 16px;
+    }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    .ui-layer {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        align-items: flex-start;
+        padding-top: 40px;
+    }
+
+    h1#screenTitle {
+        font-size: 2rem;
+        letter-spacing: 3px;
+        margin-bottom: 4px;
+    }
+
+    .tagline {
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+    }
+
+    .ui-content {
+        padding: 20px 14px;
+    }
+
+    .back-link {
+        font-size: 0.7rem;
+        margin-bottom: 12px;
+        letter-spacing: 1.5px;
+    }
+
+    .status-text {
+        font-size: 0.78rem;
+        margin-top: 20px;
+    }
+
+    /* Stack mode/diff cards vertically on mobile */
+    .mode-select,
+    .difficulty-select,
+    .level-select {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        width: 100%;
+    }
+
+    .mode-card,
+    .diff-card,
+    .level-card {
+        padding: 18px 24px;
+        width: 100%;
+        max-width: 320px;
+        flex-direction: row;
+        gap: 14px;
+        border-radius: 16px;
+    }
+
+    .mode-icon,
+    .diff-icon {
+        font-size: 2rem;
+    }
+
+    .mode-name,
+    .diff-name,
+    .level-name {
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    .mode-desc,
+    .diff-desc,
+    .level-desc {
+        font-size: 0.7rem;
+    }
+
+    /* HUD scaling */
+    #scoreBox {
+        top: 10px;
+        left: 12px;
+    }
+
+    .score-label {
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+    }
+
+    #scoreDisplay {
+        font-size: 1.5rem;
+    }
+
+    #comboBox {
+        top: 8px;
+        right: 12px;
+    }
+
+    .combo-prefix {
+        font-size: 1.2rem;
+    }
+
+    #comboDisplay {
+        font-size: 2.5rem;
+    }
+
+    .combo-label {
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+    }
+
+    /* Results */
+    .result-row {
+        padding: 10px 0;
+    }
+
+    .result-label {
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+
+    .result-value {
+        font-size: 1.3rem;
+    }
+
+    .winner-text {
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+    }
+
+    .play-again-btn {
+        padding: 12px 30px;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        margin-top: 20px;
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* ---- Small Phones ---- */
+@media (max-width: 400px) {
+    h1#screenTitle {
+        font-size: 1.6rem;
+        letter-spacing: 2px;
+    }
+
+    .tagline {
+        font-size: 0.65rem;
+        margin-bottom: 16px;
+    }
+
+    .ui-content {
+        padding: 16px 10px;
+    }
+
+    .mode-card,
+    .diff-card,
+    .level-card {
+        padding: 14px 18px;
+        max-width: 280px;
+    }
+
+    .mode-name,
+    .diff-name,
+    .level-name {
+        font-size: 1rem;
+    }
+
+    .mode-icon,
+    .diff-icon {
+        font-size: 1.6rem;
+    }
+
+    #scoreDisplay {
+        font-size: 1.2rem;
+    }
+
+    #comboDisplay {
+        font-size: 2rem;
+    }
+
+    .result-value {
+        font-size: 1.1rem;
+    }
+
+    .winner-text {
+        font-size: 1.2rem;
+    }
+
+    .play-again-btn {
+        padding: 10px 24px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ---- Landscape prevention hint ---- */
+@media (max-height: 500px) and (orientation: landscape) {
+    #scoreBox {
+        top: 6px;
+        left: 10px;
+    }
+
+    #comboBox {
+        top: 4px;
+        right: 10px;
+    }
+
+    .score-label {
+        font-size: 0.55rem;
+    }
+
+    #scoreDisplay {
+        font-size: 1.2rem;
+    }
+
+    #comboDisplay {
+        font-size: 2rem;
+    }
+
+    h1#screenTitle {
+        font-size: 1.8rem;
+    }
+
+    .tagline {
+        font-size: 0.7rem;
+        margin-bottom: 12px;
+    }
+}

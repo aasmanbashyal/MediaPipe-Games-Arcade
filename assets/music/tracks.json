@@ -1,0 +1,16 @@
+{
+  "tracks": [
+    {
+      "name": "Starri Motion",
+      "file": "starri-motion.mp3",
+      "bpm": 120,
+      "duration": 45
+    },
+    {
+      "name": "Advikini Power",
+      "file": "advik-2.mp3",
+      "bpm": 120,
+      "duration": 45
+    }
+  ]
+}

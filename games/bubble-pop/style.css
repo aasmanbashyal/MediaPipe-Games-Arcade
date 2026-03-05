@@ -1,0 +1,108 @@
+/* ============================================
+   BUBBLE POP — Game-Specific Styles
+   Base styles loaded from ../../shared/game-base.css
+   ============================================ */
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ---- Bubble Pop overrides ---- */
+#miniViewContainer {
+    border-color: rgba(123, 97, 255, 0.4);
+    box-shadow: 0 0 30px rgba(123, 97, 255, 0.2);
+}
+
+.back-link:hover {
+    color: #7b61ff;
+}
+
+h1#screenTitle {
+    background: linear-gradient(135deg, #7b61ff, #00e5ff, #ff6ec7);
+}
+
+.diff-card:last-child {
+    --card-rgb: 255, 110, 199;
+}
+
+.diff-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ---- Timer ---- */
+#timerBox {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+#timerDisplay {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #00e5ff;
+}
+
+.timer-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Bubble Pop combo uses simpler colors */
+.combo-prefix {
+    color: #7b61ff;
+}
+
+#comboDisplay {
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, #7b61ff, #ff6ec7);
+}
+
+.combo-label {
+    color: rgba(255, 255, 255, 0.3);
+    background: none;
+    -webkit-text-fill-color: unset;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    #timerBox {
+        top: 12px;
+    }
+
+    #timerDisplay {
+        font-size: 1.6rem;
+    }
+
+    .timer-label {
+        font-size: 0.55rem;
+    }
+
+    #comboDisplay {
+        font-size: 2.5rem;
+    }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Air Hockey — Advik's Games</title>
+    <meta name="description" content="Two-player air hockey powered by hand tracking.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/game-base.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="game.js"></script>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="rotate-overlay">
+            <div class="rotate-icon">📱</div>
+            <p class="rotate-text">Rotate to landscape</p>
+            <p class="rotate-subtext">This game is designed for landscape mode</p>
+        </div>
+        <div id="miniViewContainer">
+            <video id="webcamView" autoplay playsinline></video>
+            <canvas id="miniCanvas"></canvas>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hudOverlay" class="hud-layer" style="display: none;">
+            <div id="scoreP1" class="player-score left-score">
+                <span class="player-label">P1</span><span class="player-points" id="p1Score">0</span>
+            </div>
+            <div id="scoreP2" class="player-score right-score">
+                <span class="player-label">P2</span><span class="player-points" id="p2Score">0</span>
+            </div>
+            <div id="centerInfo"></div>
+        </div>
+
+        <!-- Menu -->
+        <div id="uiOverlay" class="ui-layer">
+            <div class="ui-content">
+                <a href="../../index.html" class="back-link">← BACK TO ARCADE</a>
+                <h1 id="screenTitle">AIR HOCKEY</h1>
+                <p class="tagline">Control your paddle with your hand</p>
+                <div class="mode-select" id="modeSelect">
+                    <button class="mode-card" data-mode="1p" id="btn1P">
+                        <span class="mode-icon">🤖</span>
+                        <span class="mode-name">VS AI</span>
+                        <span class="mode-desc">Play against the computer</span>
+                    </button>
+                    <button class="mode-card" data-mode="2p" id="btn2P">
+                        <span class="mode-icon">👥</span>
+                        <span class="mode-name">2 PLAYERS</span>
+                        <span class="mode-desc">Each hand is a paddle</span>
+                    </button>
+                </div>
+                <div id="resultsPanel" style="display: none;">
+                    <h2 id="winnerText" class="winner-text"></h2>
+                    <button id="playAgainBtn" class="play-again-btn">PLAY AGAIN</button>
+                </div>
+                <p id="statusText" class="status-text">Loading AI...</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

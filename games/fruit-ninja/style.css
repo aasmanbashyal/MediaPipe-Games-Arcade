@@ -1,0 +1,87 @@
+/* ============================================
+   FRUIT NINJA — Game-Specific Styles
+   Base styles loaded from ../../shared/game-base.css
+   ============================================ */
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+/* ---- Fruit Ninja overrides ---- */
+#miniViewContainer {
+    border-color: rgba(76, 175, 80, 0.4);
+    box-shadow: 0 0 30px rgba(76, 175, 80, 0.2);
+}
+
+.back-link:hover {
+    color: #4caf50;
+}
+
+h1#screenTitle {
+    background: linear-gradient(135deg, #4caf50, #ffeb3b, #ff6ec7);
+}
+
+.diff-card:first-child {
+    --card-rgb: 76, 175, 80;
+}
+
+.diff-card:last-child {
+    --card-rgb: 0, 229, 255;
+}
+
+.diff-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ---- Timer ---- */
+#timerBox {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+#timerDisplay {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #4caf50;
+}
+
+.timer-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Slice trail */
+.slice-trail {
+    position: absolute;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    #timerBox {
+        top: 12px;
+    }
+
+    #timerDisplay {
+        font-size: 1.6rem;
+    }
+
+    .timer-label {
+        font-size: 0.55rem;
+    }
+}

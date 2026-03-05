@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Reaction Duel — Advik's Games</title>
+    <meta name="description" content="Test your reflexes in this hand-tracking reaction game.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/game-base.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="game.js"></script>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="rotate-overlay">
+            <div class="rotate-icon">📱</div>
+            <p class="rotate-text">Rotate to landscape</p>
+            <p class="rotate-subtext">This game is designed for landscape mode</p>
+        </div>
+        <div id="miniViewContainer">
+            <video id="webcamView" autoplay playsinline></video>
+            <canvas id="miniCanvas"></canvas>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hudOverlay" class="hud-layer" style="display: none;">
+            <div id="roundInfo" class="round-info"></div>
+            <div id="p1Wins" class="wins-display left-wins">0</div>
+            <div id="p2Wins" class="wins-display right-wins">0</div>
+            <div id="centerMsg" class="center-msg"></div>
+            <div id="reactionTime" class="reaction-time"></div>
+        </div>
+
+        <!-- Menu -->
+        <div id="uiOverlay" class="ui-layer">
+            <div class="ui-content">
+                <a href="../../index.html" class="back-link">← BACK TO ARCADE</a>
+                <h1 id="screenTitle">REACTION DUEL</h1>
+                <p class="tagline" id="taglineText">Race to touch the target first</p>
+                <div class="mode-select" id="modeSelect">
+                    <button class="mode-card" data-mode="solo" id="btnSolo">
+                        <span class="mode-icon">🎯</span>
+                        <span class="mode-name">SOLO</span>
+                        <span class="mode-desc">Beat your best time</span>
+                    </button>
+                    <button class="mode-card" data-mode="duel" id="btnDuel">
+                        <span class="mode-icon">⚔️</span>
+                        <span class="mode-name">DUEL</span>
+                        <span class="mode-desc">First to touch wins</span>
+                    </button>
+                </div>
+                <div id="resultsPanel" style="display: none;">
+                    <h2 id="winnerText" class="winner-text"></h2>
+                    <div id="statsBlock" class="stats-block"></div>
+                    <button id="playAgainBtn" class="play-again-btn">PLAY AGAIN</button>
+                </div>
+                <p id="statusText" class="status-text">Loading AI...</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

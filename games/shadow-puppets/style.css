@@ -1,0 +1,174 @@
+/* ============================================
+   SHADOW PUPPETS — Game-Specific Styles
+   Base styles loaded from ../../shared/game-base.css
+   ============================================ */
+
+@keyframes gestureGlow {
+
+    0%,
+    100% {
+        text-shadow: 0 0 30px rgba(255, 170, 0, 0.4);
+    }
+
+    50% {
+        text-shadow: 0 0 60px rgba(255, 170, 0, 0.8);
+    }
+}
+
+@keyframes matchPop {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(0.5);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1.4);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50px) scale(1);
+    }
+}
+
+/* ---- Shadow Puppets overrides ---- */
+#miniViewContainer {
+    border-color: rgba(255, 170, 0, 0.4);
+    box-shadow: 0 0 30px rgba(255, 170, 0, 0.2);
+}
+
+.back-link:hover {
+    color: #ffaa00;
+}
+
+h1#screenTitle {
+    background: linear-gradient(135deg, #ffaa00, #ff6ec7, #7b61ff);
+}
+
+.diff-card:first-child {
+    --card-rgb: 255, 170, 0;
+}
+
+.diff-card:last-child {
+    --card-rgb: 255, 110, 199;
+}
+
+/* ---- Round Display ---- */
+#roundBox {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+}
+
+/* ---- Timer Bar ---- */
+#timerBar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#timerFill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ffaa00, #ff6ec7);
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+    transition: width 0.1s linear;
+}
+
+/* ---- Gesture Target ---- */
+#gestureTarget {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10rem;
+    text-align: center;
+    pointer-events: none;
+    animation: gestureGlow 2s ease-in-out infinite;
+    opacity: 0.8;
+}
+
+/* ---- Match Feedback ---- */
+#matchFeedback {
+    position: absolute;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 20;
+    text-shadow: 0 0 30px currentColor;
+}
+
+#matchFeedback.show {
+    animation: matchPop 0.8s ease-out forwards;
+}
+
+#matchFeedback.correct {
+    color: #4caf50;
+}
+
+#matchFeedback.wrong {
+    color: #ff3355;
+}
+
+#matchFeedback.timeout {
+    color: #ffaa00;
+}
+
+.play-again-btn {
+    background: linear-gradient(135deg, rgba(255, 170, 0, 0.3), rgba(255, 110, 199, 0.3));
+    border-color: rgba(255, 170, 0, 0.5);
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+}
+
+.play-again-btn:hover {
+    box-shadow: 0 0 35px rgba(255, 170, 0, 0.5);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    #gestureTarget {
+        font-size: 6rem;
+    }
+
+    #matchFeedback {
+        font-size: 1.6rem;
+        letter-spacing: 3px;
+        bottom: 20%;
+    }
+
+    #roundBox {
+        font-size: 0.8rem;
+        top: 12px;
+        letter-spacing: 2px;
+    }
+
+    #timerBar {
+        height: 6px;
+    }
+}
+
+@media (max-width: 400px) {
+    #gestureTarget {
+        font-size: 4.5rem;
+    }
+
+    #matchFeedback {
+        font-size: 1.3rem;
+    }
+}
