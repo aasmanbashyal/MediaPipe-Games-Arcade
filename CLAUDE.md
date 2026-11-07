@@ -1,66 +1,50 @@
-# CLAUDE.md
+# Working on MediaGames
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Running Locally
-
-A local server is required because the project uses ES modules (`type="module"`). Opening `index.html` directly as a file won't work.
-
-```bash
-# Python (simplest)
-python -m http.server 8000
-
-# Node.js
-npx -y serve .
-```
-
-Open `http://localhost:8000`. No build step — pure HTML/CSS/JS.
+This is a static HTML/CSS/ES-module arcade. Keep the no-build deployment.
+Use `bun install --frozen-lockfile`, `bun run dev`, and `bun run test` for local
+development. Tests also need Node.js 24 and `bunx playwright install chromium`.
+The optional `bun run test:vision` downloads real models and reference images.
 
 ## Architecture
 
-**MediaGames** is a static, no-build hand-tracking arcade. All games share a fixed virtual canvas of `960x540` (exported as `GAME_WIDTH`/`GAME_HEIGHT` from `shared/hand-tracker.js`), independent of webcam resolution.
+- Every game lives in `games/<name>/` with `index.html`, `style.css`, and `game.js`.
+- `shared/hand-tracker.js` owns input selection, webcam cleanup, pointer controls,
+  smoothing, two-hand assignment, and gesture practice. `detectHands()` schedules
+  asynchronous inference; games read the latest pointers through `getPointers()`.
+  Pointer `sampleTime` is the capture timestamp, not the rendering timestamp.
+- `shared/gesture-model.js` manages LiteRT worker inference. Keep CDN versions and
+  model URLs pinned. `hand-model-math.js` implements palm/landmark/gesture geometry;
+  `tflite-batch.js` specializes dynamic batch-one signatures for LiteRT.
+- `shared/game-controls.js` provides pause, restart, input recovery, and navigation.
+  Each game connects it to `GameClock` in `shared/gameplay-clock.js`. Deadlines use
+  active game time, never raw wall time. Hockey uses fixed simulation steps.
+- `shared/hockey-physics.js` contains deterministic collision and scoring rules.
+- `shared/audio.js` provides synthesized effects and `MusicManager`. Handle rejected
+  playback promises. Music is optional and must not stop round progression.
+- `shared/game-base.css` holds responsive menus, input controls, scores, and dialogs.
+  Game-specific CSS loads afterward, so check selector specificity on small screens.
+- `shared/particles.js` and `shared/background.js` draw shared visual effects.
 
-### Shared Modules (`shared/`)
+## Coordinates and lifecycle
 
-- **`hand-tracker.js`** — Core module. Wraps MediaPipe GestureRecognizer (loaded from CDN). Exports:
-  - `initHandTracker(video, onReady, onError)` — initializes webcam + GestureRecognizer
-  - `detectHands()` — call once per animation frame to update internal pointer state
-  - `getPointers()` — returns array of 2 pointer objects `{ x, y, active, grace, landmarks, gesture }`
-  - `drawPointers(ctx, w, h)` / `drawSkeleton(ctx, w, h)` — rendering helpers
-  - Pointer[0] = user's left hand, Pointer[1] = user's right hand (MediaPipe reports camera-mirrored handedness)
-  - Uses One Euro Filter for smooth, jitter-free tracking; grace frames prevent hand-loss flickering
+The virtual canvas is 960 × 540, independent of camera resolution. CSS mirrors the
+canvas once. Camera landmarks remain in raw image coordinates; screen pointers
+are mapped through `pointerToGame`. Do not mirror again in game logic. Text drawn
+inside a mirrored canvas needs its own counter-transform.
 
-- **`game-init.js`** — `setupGame(opts)` helper that wires webcam + canvas sizing + the render loop. Games that don't need special setup can use this; others (like Air Hockey) initialize directly.
+Check both mouse and touch when changing input. Camera initialization is explicit
+and lazy; local pointer play must survive CDN failure. Close models and stop all
+media tracks on input changes and departure. Guard late async completions so they
+cannot reactivate an abandoned camera session. Returning from the browser cache
+must restore a usable control chooser before resuming the round.
 
-- **`audio.js`** — Synthesized SFX via Web Audio API (`playPop`, `playHit`, `playGoal`, `playSlice`, `playBomb`, `playMiss`, `playSuccess`, `playTick`, `resumeAudio`). Also exports `MusicManager` class for file-based music via `<audio>` element.
+## Validation and deployment
 
-- **`particles.js`** — `ParticleSystem` class with object pooling (pre-allocated pool of 500). Methods: `explode(x, y, color, count)`, `sparkle(x, y, color)`, `update()`, `draw(ctx)`.
+Run relevant unit and browser tests after behavior changes. For inference changes,
+also run the optional real-model check and compare plausible landmarks/gestures.
+Verify portrait and landscape layouts when moving game controls. Document any
+hardware or browser behavior that remains untested.
 
-- **`background.js`** — Starfield background renderer (shared across games).
-
-- **`game-base.css`** — Common game styles (layout, overlays, mini canvas positioning).
-
-### Game Structure
-
-Each game lives in `games/<name>/` with `index.html`, `style.css`, and `game.js`. Games import directly from `../../shared/`. All game state machines use a `state` variable cycling through phases like `menu → countdown → playing → results`.
-
-### Canvas Layout
-
-Each game HTML has:
-- `#webcamView` — hidden `<video>` element fed to MediaPipe
-- `#gameCanvas` — main rendering canvas (mirrored with `transform: scaleX(-1)` so left/right match user's perspective)
-- `#miniCanvas` — small overlay showing hand skeleton
-
-### Music
-
-Tracks are registered in `public/music/tracks.json` with `{ name, file, bpm, duration }`. Games fetch this manifest at startup and pick a random track. Supported formats: `.mp3`, `.ogg`, `.wav`.
-
-## Deployment
-
-Static site — deploy to Vercel with no build config needed:
-
-```bash
-vercel --prod
-```
-
-Webcam access requires HTTPS (Vercel provides this automatically).
+Deploy as a static site without a build command. HTTPS is required for webcams
+outside localhost. Tracks belong in `assets/music/`, with metadata in
+`assets/music/tracks.json`.

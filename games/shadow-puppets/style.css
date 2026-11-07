@@ -91,11 +91,11 @@ h1#screenTitle {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 10rem;
+    font-size: clamp(3.5rem, min(18vw, 24dvh), 9rem);
     text-align: center;
     pointer-events: none;
     animation: gestureGlow 2s ease-in-out infinite;
-    opacity: 0.8;
+    opacity: 1;
 }
 
 /* ---- Match Feedback ---- */
@@ -142,10 +142,6 @@ h1#screenTitle {
 
 /* ---- Mobile ---- */
 @media (max-width: 600px) {
-    #gestureTarget {
-        font-size: 6rem;
-    }
-
     #matchFeedback {
         font-size: 1.6rem;
         letter-spacing: 3px;
@@ -164,10 +160,6 @@ h1#screenTitle {
 }
 
 @media (max-width: 400px) {
-    #gestureTarget {
-        font-size: 4.5rem;
-    }
-
     #matchFeedback {
         font-size: 1.3rem;
     }

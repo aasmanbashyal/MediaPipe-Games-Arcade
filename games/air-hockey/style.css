@@ -43,6 +43,16 @@ h1#screenTitle {
 }
 
 /* ---- Player Scores ---- */
+@media (max-width: 540px) and (orientation: portrait) {
+    .hud-layer .player-score {
+        top: calc(50dvh - (100vw - 24px) * 9 / 32 - 80px);
+    }
+    .game-toolbar {
+        top: calc(50dvh + (100vw - 24px) * 9 / 32 + 20px);
+        bottom: auto;
+    }
+}
+
 .player-score {
     position: absolute;
     top: 30px;

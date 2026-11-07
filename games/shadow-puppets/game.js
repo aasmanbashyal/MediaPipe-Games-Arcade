@@ -1,3 +1,5 @@
+import { GameClock } from '../../shared/gameplay-clock.js';
+import { createGameControls } from '../../shared/game-controls.js';
 import { initHandTracker, detectHands, getPointers, getGestures, drawSkeleton, drawPointers, GAME_WIDTH, GAME_HEIGHT } from '../../shared/hand-tracker.js';
 import { ParticleSystem } from '../../shared/particles.js';
 import { playPop, playMiss, playSuccess, playTick, resumeAudio } from '../../shared/audio.js';
@@ -6,14 +8,14 @@ import { Background } from '../../shared/background.js';
 // ---- GESTURE DEFINITIONS ----
 const GESTURES = {
     easy: [
-        { name: 'Thumbs_Up', emoji: '👍', label: 'THUMBS UP' },
+        { name: 'Thumb_Up', emoji: '👍', label: 'THUMBS UP' },
         { name: 'Open_Palm', emoji: '✋', label: 'OPEN PALM' },
         { name: 'Victory', emoji: '✌️', label: 'PEACE' },
         { name: 'Closed_Fist', emoji: '✊', label: 'FIST' },
     ],
     hard: [
-        { name: 'Thumbs_Up', emoji: '👍', label: 'THUMBS UP' },
-        { name: 'Thumbs_Down', emoji: '👎', label: 'THUMBS DOWN' },
+        { name: 'Thumb_Up', emoji: '👍', label: 'THUMBS UP' },
+        { name: 'Thumb_Down', emoji: '👎', label: 'THUMBS DOWN' },
         { name: 'Open_Palm', emoji: '✋', label: 'OPEN PALM' },
         { name: 'Victory', emoji: '✌️', label: 'PEACE' },
         { name: 'Closed_Fist', emoji: '✊', label: 'FIST' },
@@ -29,6 +31,8 @@ const CONFIGS = {
 
 // ---- STATE ----
 let state = 'menu';
+const clock = new GameClock();
+let frameSeconds = 1 / 60;
 let config = null;
 let currentRound = 0, totalRounds = 0;
 let score = 0, streak = 0, maxStreak = 0, matched = 0;
@@ -82,6 +86,13 @@ const timerFill = document.getElementById('timerFill');
 const gestureTarget = document.getElementById('gestureTarget');
 const matchFeedback = document.getElementById('matchFeedback');
 
+const controls = createGameControls({
+    getState: () => state,
+    onPause: () => { clock.pause(); bgAudio.pause(); },
+    onResume: () => { clock.resume(); if (bgAudio.src) bgAudio.play().catch(() => {}); },
+    onRestart: () => { clock.resume(); startGame(config || CONFIGS[Object.keys(CONFIGS)[0]]); },
+});
+
 // ---- INIT ----
 statusText.innerText = "Loading AI...";
 diffSelect.style.display = 'none';
@@ -113,9 +124,12 @@ document.getElementById('playAgainBtn')?.addEventListener('click', () => {
 });
 
 function startGame(cfg) {
+    clock.resume(); clock.resetFrame();
     config = cfg; score = 0; streak = 0; maxStreak = 0; matched = 0;
     currentRound = 0; totalRounds = cfg.rounds;
-    particles.clear();
+    particles.clear(); pauseUntil = 0; roundResolved = false; comboBox.style.opacity = 0;
+    if (feedbackTimeout) clearTimeout(feedbackTimeout);
+    matchFeedback.className = '';
     updateHUD();
     uiOverlay.style.display = 'none'; hudOverlay.style.display = 'block';
     state = 'playing';
@@ -139,7 +153,7 @@ function nextRound() {
 
     targetGesture = newGesture;
     gestureTarget.innerText = targetGesture.emoji;
-    roundStartTime = performance.now();
+    roundStartTime = clock.now();
     timerFill.style.width = '100%';
     playTick();
 }
@@ -158,6 +172,9 @@ function endGame() {
 
 // ---- MAIN LOOP ----
 function mainLoop() {
+    document.body.dataset.gameState = state; controls.update();
+    frameSeconds = clock.frame();
+    if (clock.paused) { requestAnimationFrame(mainLoop); return; }
     detectHands();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
@@ -169,12 +186,14 @@ function mainLoop() {
         drawPointers(ctx, canvas.width, canvas.height);
         particles.draw(ctx);
 
-        const now = performance.now();
+        const now = clock.now();
 
         // Pause between rounds
         if (now < pauseUntil) {
             // Still in pause — just render, don't check
-        } else if (!roundResolved) {
+        } else if (roundResolved) {
+            nextRound();
+        } else {
             const elapsed = now - roundStartTime;
             const remaining = Math.max(0, config.timePerGesture - elapsed);
             timerFill.style.width = (remaining / config.timePerGesture * 100) + '%';
@@ -187,7 +206,6 @@ function mainLoop() {
                 showFeedback('TIME OUT', 'timeout');
                 playMiss();
                 pauseUntil = now + 1200;
-                setTimeout(() => nextRound(), 1200);
             } else {
                 checkGestureMatch();
             }
@@ -210,7 +228,7 @@ function checkGestureMatch() {
             streak++;
             if (streak > maxStreak) maxStreak = streak;
 
-            const elapsed = performance.now() - roundStartTime;
+            const elapsed = clock.now() - roundStartTime;
             const timeBonus = Math.max(0, Math.floor((1 - elapsed / config.timePerGesture) * 500));
             const points = (200 + timeBonus) * Math.min(streak, 10);
             score += points;
@@ -227,8 +245,7 @@ function checkGestureMatch() {
             const w = canvas.width, h = canvas.height;
             particles.explode(w / 2, h / 2, '#ffaa00', 25);
 
-            pauseUntil = performance.now() + 1000;
-            setTimeout(() => nextRound(), 1000);
+            pauseUntil = clock.now() + 1000;
             return;
         }
     }
@@ -251,18 +268,21 @@ function drawGestureHint() {
     if (!targetGesture || state !== 'playing') return;
     const w = canvas.width, h = canvas.height;
 
-    // Large translucent label beneath the emoji
+    // Keep the target name legible below the emoji at phone-sized canvas scales.
     ctx.save();
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = '#ffaa00';
-    ctx.font = '900 48px Outfit';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff1ce';
+    ctx.font = '700 40px Outfit';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(targetGesture.label, w / 2, h * 0.7);
+    // The canvas is mirrored for hand input; keep instructional text readable.
+    ctx.translate(w / 2, h * 0.77);
+    ctx.scale(-1, 1);
+    ctx.fillText(targetGesture.label, 0, 0);
     ctx.restore();
 
     // Pulsing ring around center
-    const time = performance.now() / 1000;
+    const time = clock.now() / 1000;
     const pulse = 1 + Math.sin(time * 3) * 0.05;
     const r = 120 * pulse;
 

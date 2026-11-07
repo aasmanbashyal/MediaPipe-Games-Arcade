@@ -1,3 +1,5 @@
+import { GameClock } from '../../shared/gameplay-clock.js';
+import { createGameControls } from '../../shared/game-controls.js';
 import { initHandTracker, detectHands, getPointers, drawSkeleton, drawPointers, GAME_WIDTH, GAME_HEIGHT } from '../../shared/hand-tracker.js';
 import { ParticleSystem } from '../../shared/particles.js';
 import { playPop, playSuccess, playMiss, playTick, resumeAudio } from '../../shared/audio.js';
@@ -11,6 +13,8 @@ const TARGET_COLORS = ['#ffeb3b', '#00e5ff', '#ff6ec7', '#7b61ff', '#4caf50'];
 // ---- STATE ----
 let gameMode = 'solo';
 let state = 'menu';
+const clock = new GameClock();
+let frameSeconds = 1 / 60;
 let currentRound = 0;
 let p1Wins = 0, p2Wins = 0;
 let target = null;
@@ -64,6 +68,13 @@ const reactionTimeEl = document.getElementById('reactionTime');
 const winnerText = document.getElementById('winnerText');
 const statsBlock = document.getElementById('statsBlock');
 
+const controls = createGameControls({
+    getState: () => state,
+    onPause: () => { clock.pause(); bgAudio.pause(); },
+    onResume: () => { clock.resume(); if (bgAudio.src) bgAudio.play().catch(() => {}); },
+    onRestart: () => { clock.resume(); startGame(gameMode); },
+});
+
 // ---- INIT ----
 statusText.innerText = "Loading AI...";
 modeSelect.style.display = 'none';
@@ -89,6 +100,7 @@ document.getElementById('playAgainBtn')?.addEventListener('click', () => {
 });
 
 function startGame(mode) {
+    clock.resume(); clock.resetFrame();
     gameMode = mode; currentRound = 0; p1Wins = 0; p2Wins = 0; reactionTimes = [];
     updateWinsDisplay();
     uiOverlay.style.display = 'none'; hudOverlay.style.display = 'block';
@@ -106,7 +118,7 @@ function startRound() {
     reactionTimeEl.innerText = '';
     target = null; roundResult = null;
     state = 'waiting';
-    waitStart = performance.now();
+    waitStart = clock.now();
     waitDuration = 1500 + Math.random() * 3000;
 }
 
@@ -118,7 +130,7 @@ function showTarget() {
         y: margin + Math.random() * (h - margin * 2),
         r: TARGET_RADIUS,
         color: TARGET_COLORS[Math.floor(Math.random() * TARGET_COLORS.length)],
-        shownAt: performance.now(),
+        shownAt: clock.now(),
     };
     centerMsg.innerText = 'GO!';
     state = 'target_shown';
@@ -138,7 +150,7 @@ function checkTouched() {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < target.r + 25) {
-            const reactionMs = performance.now() - target.shownAt;
+            const reactionMs = clock.now() - target.shownAt;
             const winner = gameMode === 'duel' ? (i === 0 ? 1 : 2) : 1;
             if (winner === 1) p1Wins++; else p2Wins++;
             updateWinsDisplay();
@@ -158,7 +170,7 @@ function checkTouched() {
             }
 
             state = 'result_pause';
-            resultPauseStart = performance.now();
+            resultPauseStart = clock.now();
             target = null;
             return;
         }
@@ -180,10 +192,10 @@ function endGame() {
     if (gameMode === 'solo') {
         const avg = reactionTimes.length > 0 ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) : 0;
         const best = reactionTimes.length > 0 ? Math.round(Math.min(...reactionTimes)) : 0;
-        winnerText.innerText = avg < 350 ? 'INCREDIBLE!' : avg < 500 ? 'GREAT REFLEXES!' : 'KEEP PRACTICING!';
+        winnerText.innerText = reactionTimes.length === 0 ? 'TRY AGAIN!' : avg < 350 ? 'INCREDIBLE!' : avg < 500 ? 'GREAT REFLEXES!' : 'KEEP PRACTICING!';
         statsBlock.innerHTML = `
-            <div class="result-row"><span class="result-label">Avg Reaction</span><span class="result-value">${avg} ms</span></div>
-            <div class="result-row"><span class="result-label">Best Time</span><span class="result-value">${best} ms</span></div>
+            <div class="result-row"><span class="result-label">Avg Reaction</span><span class="result-value">${reactionTimes.length ? avg + ' ms' : 'No hits'}</span></div>
+            <div class="result-row"><span class="result-label">Best Time</span><span class="result-value">${reactionTimes.length ? best + ' ms' : 'No hits'}</span></div>
             <div class="result-row"><span class="result-label">Rounds Won</span><span class="result-value">${p1Wins} / ${TOTAL_ROUNDS}</span></div>
         `;
     } else {
@@ -198,6 +210,9 @@ function endGame() {
 
 // ---- MAIN LOOP ----
 function mainLoop() {
+    document.body.dataset.gameState = state; controls.update();
+    frameSeconds = clock.frame();
+    if (clock.paused) { requestAnimationFrame(mainLoop); return; }
     detectHands();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
@@ -211,7 +226,7 @@ function mainLoop() {
             bg.draw(ctx, canvas.width, canvas.height);
             drawDuelDivider();
             drawPointers(ctx, canvas.width, canvas.height);
-            if (performance.now() - waitStart >= waitDuration) showTarget();
+            if (clock.now() - waitStart >= waitDuration) showTarget();
             break;
         case 'target_shown':
             bg.draw(ctx, canvas.width, canvas.height);
@@ -220,18 +235,18 @@ function mainLoop() {
             drawPointers(ctx, canvas.width, canvas.height);
             checkTouched();
             particles.draw(ctx);
-            if (performance.now() - target?.shownAt > 5000) {
+            if (clock.now() - target?.shownAt > 5000) {
                 centerMsg.innerText = 'TOO SLOW!';
                 reactionTimeEl.innerText = '';
                 playMiss();
-                state = 'result_pause'; resultPauseStart = performance.now(); target = null;
+                state = 'result_pause'; resultPauseStart = clock.now(); target = null;
             }
             break;
         case 'result_pause':
             bg.draw(ctx, canvas.width, canvas.height);
             drawPointers(ctx, canvas.width, canvas.height);
             particles.draw(ctx);
-            if (performance.now() - resultPauseStart > 2000) startRound();
+            if (clock.now() - resultPauseStart > 2000) startRound();
             break;
     }
     requestAnimationFrame(mainLoop);
@@ -249,7 +264,7 @@ function drawDuelDivider() {
 
 function drawTarget() {
     if (!target) return;
-    const time = performance.now() / 1000;
+    const time = clock.now() / 1000;
     const pulse = 1 + Math.sin(time * 6) * 0.06;
     const r = target.r * pulse;
 

@@ -1,3 +1,5 @@
+import { GameClock } from '../../shared/gameplay-clock.js';
+import { createGameControls } from '../../shared/game-controls.js';
 import { initHandTracker, detectHands, getPointers, drawSkeleton, drawPointers, GAME_WIDTH, GAME_HEIGHT } from '../../shared/hand-tracker.js';
 import { ParticleSystem } from '../../shared/particles.js';
 import { playPop, playSuccess, resumeAudio } from '../../shared/audio.js';
@@ -19,6 +21,8 @@ const BUBBLE_COLORS = [
 
 // ---- STATE ----
 let state = 'menu';
+const clock = new GameClock();
+let frameSeconds = 1 / 60;
 let config = null;
 let bubbles = [], score = 0, combo = 0, maxCombo = 0, popped = 0;
 let gameStartTime = 0, lastSpawnTime = 0;
@@ -65,6 +69,13 @@ const comboBox = document.getElementById('comboBox');
 const comboDisplay = document.getElementById('comboDisplay');
 const timerDisplay = document.getElementById('timerDisplay');
 
+const controls = createGameControls({
+    getState: () => state,
+    onPause: () => { clock.pause(); bgAudio.pause(); },
+    onResume: () => { clock.resume(); if (bgAudio.src) bgAudio.play().catch(() => {}); },
+    onRestart: () => { clock.resume(); startGame(config || CONFIGS[Object.keys(CONFIGS)[0]]); },
+});
+
 // ---- INIT ----
 statusText.innerText = "Loading AI...";
 diffSelect.style.display = 'none';
@@ -96,9 +107,10 @@ document.getElementById('playAgainBtn')?.addEventListener('click', () => {
 });
 
 function startGame(cfg) {
+    clock.resume(); clock.resetFrame();
     config = cfg; score = 0; combo = 0; maxCombo = 0; popped = 0;
-    bubbles = []; particles.clear(); comboResetTimer = 0;
-    gameStartTime = performance.now(); lastSpawnTime = 0;
+    bubbles = []; particles.clear(); comboResetTimer = 0; comboBox.style.opacity = 0;
+    gameStartTime = clock.now(); lastSpawnTime = 0;
     updateHUD();
     uiOverlay.style.display = 'none'; hudOverlay.style.display = 'block';
     state = 'playing';
@@ -118,26 +130,29 @@ function endGame() {
 
 // ---- MAIN LOOP ----
 function mainLoop() {
+    document.body.dataset.gameState = state; controls.update();
+    frameSeconds = clock.frame();
+    if (clock.paused) { requestAnimationFrame(mainLoop); return; }
     detectHands();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
     drawSkeleton(miniCtx, miniCanvas.width, miniCanvas.height);
 
     if (state === 'playing') {
-        const elapsed = (performance.now() - gameStartTime) / 1000;
+        const elapsed = (clock.now() - gameStartTime) / 1000;
         const remaining = Math.max(0, config.duration - elapsed);
         timerDisplay.innerText = Math.ceil(remaining);
 
         if (remaining <= 0) { endGame(); } else {
             bg.draw(ctx, canvas.width, canvas.height);
             spawnBubbles(elapsed);
-            updateBubbles();
+            updateBubbles(frameSeconds);
             checkPops();
             drawBubbles();
             particles.draw(ctx);
             drawPointers(ctx, canvas.width, canvas.height);
 
-            if (combo > 0 && performance.now() - comboResetTimer > 1500) {
+            if (combo > 0 && clock.now() - comboResetTimer > 1500) {
                 combo = 0; comboBox.style.opacity = 0;
             }
         }
@@ -168,17 +183,18 @@ function spawnBubbles(elapsed) {
         wobbleSpeed: 0.02 + Math.random() * 0.02,
         color: isGolden ? { fill: 'rgba(255,215,0,0.3)', stroke: '#ffd700', glow: 'rgba(255,215,0,0.5)' } : BUBBLE_COLORS[colorIdx],
         golden: isGolden,
-        spawnTime: performance.now(),
+        spawnTime: clock.now(),
         alive: true,
     });
 }
 
-function updateBubbles() {
+function updateBubbles(seconds) {
+    const frames = seconds * 60;
     for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i];
-        b.x += b.vx + Math.sin(b.wobblePhase) * 0.5;
-        b.y += b.vy;
-        b.wobblePhase += b.wobbleSpeed;
+        b.x += b.vx * frames + 0.5 * (Math.cos(b.wobblePhase) - Math.cos(b.wobblePhase + b.wobbleSpeed * frames)) / b.wobbleSpeed;
+        b.y += b.vy * frames;
+        b.wobblePhase += b.wobbleSpeed * frames;
         if (b.y + b.r < -20) { bubbles.splice(i, 1); }
     }
 }
@@ -202,7 +218,7 @@ function checkPops() {
                 bubbles.splice(i, 1);
                 popped++;
                 combo++;
-                comboResetTimer = performance.now();
+                comboResetTimer = clock.now();
                 if (combo > maxCombo) maxCombo = combo;
 
                 let points = b.golden ? 500 : 100;
@@ -229,7 +245,7 @@ function updateHUD() {
 
 // ---- DRAWING ----
 function drawBubbles() {
-    const time = performance.now() / 1000;
+    const time = clock.now() / 1000;
     bubbles.forEach(b => {
         const pulse = 1 + Math.sin(time * 3 + b.wobblePhase) * 0.03;
         const r = b.r * pulse;

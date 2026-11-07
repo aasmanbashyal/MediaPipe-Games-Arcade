@@ -167,7 +167,7 @@ export class MusicManager {
 
     play() {
         if (!this._loaded) return Promise.resolve();
-        return this._audio.play().catch(() => { });
+        return this._audio.play();
     }
 
     pause() { this._audio.pause(); }

@@ -139,27 +139,30 @@
 
 /* ---- Calibration ---- */
 #calibrationOverlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     z-index: 50;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: radial-gradient(ellipse at center, rgba(10, 5, 25, 0.85) 0%, rgba(5, 2, 15, 0.95) 100%);
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(10, 5, 25, 0.55) 0%, rgba(5, 2, 15, 0.8) 100%);
 }
 
 .calibration-content {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    display: contents;
 }
 
 #calibrationTitle {
+    position: absolute;
+    left: var(--calibration-x, 50vw);
+    top: max(12px, calc(var(--calibration-y, 50dvh) - var(--calibration-size, 200px) / 2 - 78px));
+    transform: translateX(-50%);
+    width: min(94vw, 550px);
+    text-align: center;
     font-size: 2.5rem;
     font-weight: 900;
     letter-spacing: 6px;
@@ -171,21 +174,34 @@
 }
 
 #calibrationHint {
+    position: absolute;
+    left: var(--calibration-x, 50vw);
+    top: max(46px, calc(var(--calibration-y, 50dvh) - var(--calibration-size, 200px) / 2 - 40px));
+    transform: translateX(-50%);
+    width: min(92vw, 480px);
+    text-align: center;
+    line-height: 1.45;
     font-size: 1rem;
     font-weight: 300;
-    color: rgba(255, 255, 255, 0.5);
-    letter-spacing: 2px;
+    color: #c5cde4;
+    letter-spacing: 0;
 }
 
 #calibrationRing {
+    position: absolute;
+    left: var(--calibration-x, 50vw);
+    top: var(--calibration-y, 50dvh);
+    width: var(--calibration-size, 200px);
+    height: var(--calibration-size, 200px);
+    transform: translate(-50%, -50%);
     animation: calibratePulse 2s ease-in-out infinite;
     border-radius: 50%;
 }
 
 #countdownDisplay {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: var(--calibration-y, 50dvh);
+    left: var(--calibration-x, 50vw);
     transform: translate(-50%, -50%);
     font-size: 8rem;
     font-weight: 900;
@@ -240,4 +256,9 @@
     #calibrationTitle {
         font-size: 1.4rem;
     }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+    #calibrationTitle { font-size: 1.35rem; line-height: 1.1; letter-spacing: 3px; }
+    #calibrationHint { font-size: .85rem; }
 }
