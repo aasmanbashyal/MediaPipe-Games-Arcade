@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Advik's Games — Hand Tracking Arcade</title>
-    <meta name="description" content="Advik's Games — a premium suite of hand-tracking games powered by AI.">
+    <meta name="description" content="Advik's Games — Six free browser games. Play with hand tracking, a mouse, or touch.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
@@ -14,20 +14,20 @@
 
 <body>
     <!-- Stars background canvas -->
-    <canvas id="bgCanvas"></canvas>
+    <a class="skip-link" href="#gameGrid">Skip to games</a><canvas id="bgCanvas" aria-hidden="true"></canvas>
 
     <!-- Hub Screen -->
-    <div id="hubScreen" class="hub-screen">
-        <header class="hub-header">
+    <main id="hubScreen" class="hub-screen">
+        <header class="hub-header"><p class="eyebrow">A LITTLE MOVEMENT. A LOT OF PLAY.</p>
             <h1 class="hub-title">ADVIK'S GAMES</h1>
-            <p class="hub-tagline">Hand-Tracking Arcade</p>
+            <p class="hub-tagline">Your hands are the controller.</p><p class="hub-intro">Six quick games to move, react, and play together. Choose camera controls, or jump in with a mouse or touch.</p><div class="hub-features"><span>No install</span><span>Camera stays on your device</span><span>Solo or with a friend</span></div>
         </header>
 
-        <div class="game-grid" id="gameGrid">
+        <div class="section-heading"><h2>Pick your next game</h2><span>06 GAMES · ALL FREE</span></div><div class="game-grid" id="gameGrid" tabindex="-1">
             <!-- Starri Motion -->
             <a href="games/starri-motion/index.html" class="game-card" data-accent="0, 229, 255" id="card-starri">
-                <div class="card-glow"></div>
-                <div class="card-icon">🎵</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">🎵</div>
                 <div class="card-badge badge-1p">1P</div>
                 <h2 class="card-title">Starri Motion</h2>
                 <p class="card-desc">Move your hands to the rhythm — catch directional arrows as they fly in</p>
@@ -39,8 +39,8 @@
 
             <!-- Air Hockey -->
             <a href="games/air-hockey/index.html" class="game-card" data-accent="255, 110, 199" id="card-hockey">
-                <div class="card-glow"></div>
-                <div class="card-icon">🏒</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">🏒</div>
                 <div class="card-badge badge-2p">2P</div>
                 <h2 class="card-title">Air Hockey</h2>
                 <p class="card-desc">Control your paddle with your hand — play against a friend or the AI</p>
@@ -52,8 +52,8 @@
 
             <!-- Bubble Pop -->
             <a href="games/bubble-pop/index.html" class="game-card" data-accent="123, 97, 255" id="card-bubble">
-                <div class="card-glow"></div>
-                <div class="card-icon">🫧</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">🫧</div>
                 <div class="card-badge badge-1p">1P</div>
                 <h2 class="card-title">Bubble Pop</h2>
                 <p class="card-desc">Pop colorful bubbles as fast as you can — chain combos for mega points</p>
@@ -65,8 +65,8 @@
 
             <!-- Reaction Duel -->
             <a href="games/reaction-duel/index.html" class="game-card" data-accent="255, 235, 59" id="card-reaction">
-                <div class="card-glow"></div>
-                <div class="card-icon">⚡</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">⚡</div>
                 <div class="card-badge badge-dual">1-2P</div>
                 <h2 class="card-title">Reaction Duel</h2>
                 <p class="card-desc">Test your reflexes — race to touch targets before your opponent</p>
@@ -78,8 +78,8 @@
 
             <!-- Fruit Ninja -->
             <a href="games/fruit-ninja/index.html" class="game-card" data-accent="76, 175, 80" id="card-ninja">
-                <div class="card-glow"></div>
-                <div class="card-icon">🍉</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">🍉</div>
                 <div class="card-badge badge-1p">1P</div>
                 <h2 class="card-title">Fruit Ninja</h2>
                 <p class="card-desc">Swipe through flying fruits — avoid the bombs, build combos</p>
@@ -91,8 +91,8 @@
 
             <!-- Shadow Puppets -->
             <a href="games/shadow-puppets/index.html" class="game-card" data-accent="255, 170, 0" id="card-shadow">
-                <div class="card-glow"></div>
-                <div class="card-icon">🤲</div>
+                <div class="card-glow" aria-hidden="true"></div>
+                <div class="card-icon" aria-hidden="true">🤲</div>
                 <div class="card-badge badge-1p">1P</div>
                 <h2 class="card-title">Shadow Puppets</h2>
                 <p class="card-desc">Match hand gestures to on-screen targets before time runs out</p>
@@ -104,9 +104,9 @@
         </div>
 
         <footer class="hub-footer">
-            <p>Advik's Games &bull; Hand Tracking Arcade &bull; Use your webcam to play</p>
+            <p>Good lighting helps hand tracking. No camera? Mouse and touch are always available.</p>
         </footer>
-    </div>
+    </main>
 
     <script src="main.js" type="module"></script>
 </body>

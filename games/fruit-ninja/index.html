@@ -16,16 +16,11 @@
 
 <body>
     <div class="game-container">
-        <div class="rotate-overlay">
-            <div class="rotate-icon">📱</div>
-            <p class="rotate-text">Rotate to landscape</p>
-            <p class="rotate-subtext">This game is designed for landscape mode</p>
-        </div>
         <div id="miniViewContainer">
-            <video id="webcamView" autoplay playsinline></video>
-            <canvas id="miniCanvas"></canvas>
+            <video id="webcamView" autoplay playsinline muted aria-label="Camera preview"></video>
+            <canvas id="miniCanvas" aria-hidden="true"></canvas>
         </div>
-        <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas" aria-label="Game area"></canvas>
 
         <!-- HUD -->
         <div id="hudOverlay" class="hud-layer" style="display: none;">
@@ -57,7 +52,7 @@
                             class="result-value">0</span></div>
                     <button id="playAgainBtn" class="play-again-btn">PLAY AGAIN</button>
                 </div>
-                <p id="statusText" class="status-text">Loading AI...</p>
+                <p id="statusText" class="status-text">Choose controls to get started</p>
             </div>
         </div>
     </div>

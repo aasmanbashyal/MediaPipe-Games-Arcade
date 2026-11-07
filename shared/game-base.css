@@ -748,3 +748,87 @@ h1#screenTitle {
         margin-bottom: 12px;
     }
 }
+/* Readable menus and a playfield that leaves room for scores and controls. */
+[hidden] { display: none !important; }
+:root { color-scheme: dark; }
+body, html { width: 100%; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 3px solid #a7eeff; outline-offset: 4px; }
+button:disabled { cursor: wait; opacity: .55; }
+.ui-layer { overflow-y: auto; align-items: flex-start; padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)); }
+.ui-content { width: min(100%, 760px); max-width: 760px; margin: auto; padding: 24px; }
+.back-link { color: #a4adc9; letter-spacing: .1em; margin-bottom: 26px; }
+h1#screenTitle { font-size: clamp(2rem, 5.5vw, 3.6rem); letter-spacing: -.025em; animation: none; }
+.tagline { color: #b1b9d3; letter-spacing: .02em; text-transform: none; line-height: 1.5; margin-bottom: 28px; }
+.mode-select, .difficulty-select, .level-select { gap: 12px; }
+.mode-card, .diff-card, .level-card { animation: none; min-width: 150px; padding: 22px 26px; border-width: 1px; border-radius: 14px; }
+.mode-card:hover, .diff-card:hover, .level-card:hover { transform: translateY(-3px); }
+.mode-name, .diff-name, .level-name { font-size: 1.1rem; letter-spacing: .05em; }
+.mode-desc, .diff-desc, .level-desc { color: #b1b9d3; line-height: 1.45; }
+.status-text { color: #adb7d0; margin-top: 20px; letter-spacing: 0; line-height: 1.5; }
+.input-choice { background: #11162b; border: 1px solid #343d5e; border-radius: 16px; padding: 22px; margin-top: 24px; }
+.input-heading { font-size: 1.05rem; font-weight: 600; margin-bottom: 16px; }
+.input-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.input-buttons button, .game-toolbar button, .game-toolbar a, .pause-actions button, .pause-actions a, .manual-gestures button { min-height: 44px; border: 1px solid #4a567d; border-radius: 9px; padding: 10px 17px; background: #242b49; color: #f4f5ff; font: 600 .88rem 'Outfit', system-ui, sans-serif; text-decoration: none; cursor: pointer; touch-action: manipulation; }
+.input-buttons button:first-child, .pause-actions button:first-child { background: #b4a2ff; border-color: #b4a2ff; color: #13112a; }
+.input-buttons button:hover, .game-toolbar a:hover, .game-toolbar button:hover, .pause-actions button:hover, .pause-actions a:hover { filter: brightness(1.15); }
+#inputHelp { font-size: .8rem; line-height: 1.6; color: #aab5d0; margin-top: 15px; }
+#inputError:not(:empty) { margin-top: 15px; font-size: .88rem; line-height: 1.55; color: #ffc2ba; }
+#gameCanvas { width: min(calc(100vw - 24px), calc((100dvh - 124px) * (16 / 9))); height: min(calc((100vw - 24px) * (9 / 16)), calc(100dvh - 124px)); border: 1px solid #303956; border-radius: 14px; }
+body[data-input-mode='pointer'] #gameCanvas { pointer-events: auto; touch-action: none; cursor: crosshair; }
+#miniViewContainer { display: none; width: 128px; top: 80px; bottom: auto; right: 16px; pointer-events: none; z-index: 30; border-width: 1px; }
+body[data-input-mode='camera'] #miniViewContainer { display: block; }
+body:not([data-game-state]), body[data-game-state='menu'], body[data-game-state='results'] { --game-playing: 0; }
+body[data-game-state='menu'] #miniViewContainer, body[data-game-state='results'] #miniViewContainer { display: none; }
+.game-toolbar { position: fixed; z-index: 80; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; padding: 4px; border-radius: 13px; background: #090d21ee; white-space: nowrap; }
+.game-toolbar a, .game-toolbar button { background: #151d34; font-size: .78rem; padding: 9px 15px; }
+.game-toolbar kbd { margin-left: 10px; color: #a5afc9; font: inherit; font-size: .65rem; }
+.pause-dialog { color: #f4f5ff; width: min(90vw, 410px); margin: auto; border: 1px solid #495173; border-radius: 20px; padding: 32px; background: #10162b; text-align: center; }
+.pause-dialog::backdrop { background: #030612c9; backdrop-filter: blur(5px); }
+.pause-dialog .eyebrow { color: #9cdddf; letter-spacing: .14em; font-size: .65rem; margin-bottom: 13px; }
+.pause-dialog h2 { font-size: 2rem; margin-bottom: 10px; }
+.pause-dialog > p:not(.eyebrow) { color: #aeb8d0; line-height: 1.5; font-size: .9rem; }
+.pause-actions { display: flex; flex-direction: column; gap: 9px; margin-top: 24px; }
+.pause-actions a { border-color: transparent; background: transparent; color: #b6c0d8; }
+.hud-layer #scoreBox, .hud-layer #comboBox, .hud-layer #timerBox, .hud-layer .player-score, .hud-layer .wins-display, .hud-layer #roundBox, .hud-layer .round-info { top: max(12px, env(safe-area-inset-top)); }
+.hud-layer #scoreBox { left: 20px; }
+.hud-layer #comboBox { right: 20px; }
+.hud-layer #comboDisplay { font-size: 2.2rem; }
+.hud-layer .combo-prefix { font-size: 1.3rem; }
+.hud-layer .combo-label { font-size: .6rem; letter-spacing: .1em; }
+.hud-layer .player-points, .hud-layer .wins-display { font-size: 2.5rem; }
+.hud-layer .player-label, .hud-layer .score-label, .hud-layer .timer-label { color: #b1b9d3; letter-spacing: .1em; }
+.manual-gestures { display: none; position: fixed; z-index: 60; bottom: 70px; left: 50%; transform: translateX(-50%); width: min(94vw, 530px); text-align: center; }
+body[data-game-state='playing'] .manual-gestures { display: block; }
+.manual-gestures p { color: #abb8d3; font-size: .72rem; margin-bottom: 8px; }
+.manual-gestures button { padding: 8px; min-width: 46px; margin: 2px; user-select: none; }
+body[data-paused='true'] .manual-gestures { display: none; }
+@media (max-width: 540px) {
+    .ui-content { padding: 12px 0; }
+    .tagline { font-size: .9rem; margin-bottom: 20px; }
+    .mode-card, .diff-card, .level-card { min-width: 0; flex: 1 1 100px; padding: 18px 12px; }
+    .mode-name, .diff-name, .level-name { font-size: .95rem; }
+    .mode-desc, .diff-desc, .level-desc { font-size: .73rem; }
+    .input-choice { padding: 20px 15px; }
+    #miniViewContainer { width: 96px; }
+    .hud-layer #scoreBox { left: 12px; }
+    .hud-layer #comboBox { right: 12px; }
+    .hud-layer #comboDisplay { font-size: 1.6rem; }
+    .manual-gestures { bottom: 76px; }
+    .manual-gestures button { min-width: 39px; font-size: .75rem; padding: 6px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+    #gameCanvas { width: min(calc(100vw - 24px), calc((100dvh - 94px) * 16 / 9)); height: calc(100dvh - 94px); }
+    .game-toolbar { bottom: 4px; }
+    .game-toolbar a, .game-toolbar button { min-height: 36px; padding: 7px 13px; }
+    #miniViewContainer { width: 86px; top: auto; bottom: 12px; }
+    h1#screenTitle { font-size: 2rem; }
+    .ui-content { padding: 8px 20px; }
+    .back-link { margin-bottom: 12px; }
+    .tagline { margin-bottom: 16px; }
+    .manual-gestures { bottom: 51px; }
+    .manual-gestures p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}

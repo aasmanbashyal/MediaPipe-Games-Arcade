@@ -1,106 +1,111 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/google/mediapipe/master/docs/images/mobile/gesture_recognition_android_gpu.gif" alt="MediaPipe Gesture Recognition" width="100%" style="border-radius: 12px; margin-bottom: 20px; object-fit: cover; max-height: 250px;">
+# MediaGames Arcade
 
-  # 🎮 MediaGames Arcade
-  **Fun Web Games Powered by AI Hand Tracking!**
+Six browser games built for my nephew, with camera hand tracking or local mouse
+and touch controls. [Play the arcade](https://mediagames-ten.vercel.app/).
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-  [![Made with MediaPipe](https://img.shields.io/badge/Powered_by-MediaPipe-blue)](https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer)
+| Game | How to play |
+| --- | --- |
+| Starri Motion | Catch directional notes with your hands or pointer. Hold still in the calibration zone before starting. |
+| Air Hockey | Move a paddle against the computer, or play with two hands or two touch points. |
+| Bubble Pop | Touch bubbles before the round ends. |
+| Reaction Duel | Reach targets quickly and compare reaction times. |
+| Fruit Ninja | Swipe through fruit and avoid bombs. |
+| Shadow Puppets | Hold the requested hand gesture. Pointer practice provides buttons and number keys 1–7. |
 
-  <p align="center">
-    A collection of browser games built for fun and for my nephew to play. You can control the games using only your webcam and your hands — no controllers needed!
-  </p>
+## Controls
 
-  ### [🚀 Play the Live Demo Here!](https://mediagames-ten.vercel.app/)
-</div>
+Choose **Use camera** or **Mouse or touch** when entering a game, then choose a
+mode or difficulty. A mouse controls one pointer; touch supports two simultaneous
+contacts. Camera mode supports up to two hands, including two players using the
+same hand. Keep both hands visible and separated.
 
----
+**Pause** or **Esc** freezes the round. The pause menu can resume, restart, return
+to the arcade, or turn off the camera and switch to pointer controls. Games pause
+when the tab becomes hidden or tracking fails. Camera errors offer a retry and
+pointer fallback. Navigation stops the camera; returning through browser history
+asks you to select controls again.
 
-## ✨ Features
-- **Browser-Based**: Runs entirely in your browser without needing to install anything.
-- **Controller-Free**: Uses your webcam and Google MediaPipe to track your hand movements and gestures.
-- **Fun Interface**: Colorful design with cool neon effects.
-- **Several Games**: Includes rhythm, reflex, and casual games to try out.
+The interface supports portrait and landscape layouts, keyboard focus, and
+reduced-motion preferences. Landscape gives more room for the 16:9 playfield.
 
----
+## Run locally
 
-## 🕹️ Games Included
+The app remains plain HTML, CSS, and native JavaScript modules with no build step.
+Development and tests use Bun 1.3.10 and Node.js 24.
 
-| Game | Type | Description |
-|------|------|-------------|
-| 🎵 **Starri Motion** | Rhythm | Catch directional arrows (↑, ↓, ←, →) with your hands to the beat of the music! |
-| 🏒 **Air Hockey** | Sports | Control paddles with your hands. Play against an AI opponent or a friend. |
-| 🫧 **Bubble Pop** | Casual | Pop floating bubbles for points before the time runs out. |
-| ⚡ **Reaction Duel** | Reflex | Race to touch targets as soon as they appear! Test your reflexes. |
-| 🍉 **Fruit Ninja** | Action | Swipe your hands through the air to slice flying fruits and avoid bombs. |
-| 🤲 **Shadow Puppets** | Puzzle | Match your hand gestures (👍, ✌️, ✊, ✋) to the targets on screen. |
-
----
-
-## 🛠️ Tech Stack
-
-- **Hand Tracking AI**: [MediaPipe GestureRecognizer API](https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer) (Tracks 21 hand landmarks and common gestures)
-- **Rendering**: HTML5 Canvas 2D
-- **Audio Output**: Web Audio API and standard `<audio>` tags for background music.
-- **Styling**: Vanilla CSS.
-
----
-
-## 🚀 Quick Start (Local Development)
-
-You need to run a local web server to play the games locally because the project uses native ES modules (`type="module"`).
-
-### Option 1: Python
-If you have Python installed, open the terminal in the project folder and run:
-```bash
-python -m http.server 8000
-```
-Then visit `http://localhost:8000` in your browser.
-
-### Option 2: Live Server (VS Code)
-If you are using Visual Studio Code, install the **Live Server** extension. Right-click on `index.html` and click **"Open with Live Server"**.
-
-### Option 3: Node.js
-If you have Node.js installed:
-```bash
-npx -y serve .
+```sh
+bun install --frozen-lockfile
+bun run dev
 ```
 
----
+Open `http://127.0.0.1:4174`. Any static server also works, for example
+`uv run python -m http.server 8000`. Deploy the repository as a static site with
+no build command. Camera access requires HTTPS or localhost.
 
-## ☁️ Deployment
+## Local AI with LiteRT
 
-You can deploy your own version easily using Vercel.
+Camera mode runs the official MediaPipe palm detector, hand-landmark detector,
+gesture embedder, and canned gesture classifier through **LiteRT.js 2.6.0** on
+its WebAssembly CPU backend. A worker processes one frame at a time while the
+main thread renders the games. Transferred image snapshots keep all four graphs
+on the same frame; late results are ignored after input changes.
 
-1. Install the Vercel CLI:
-   ```bash
-   npm i -g vercel
-   ```
-2. Navigate to your project folder:
-   ```bash
-   vercel
-   ```
-3. Follow the CLI prompts to deploy.
+The pinned `float16/1` model bundle downloads about 8.4 MB on first camera use,
+plus the LiteRT runtime. Runtime code comes from jsDelivr and models from Google
+Cloud Storage. Frames stay on the device. Pointer mode does not load an AI
+runtime or request camera permission, and works when external services fail.
 
-> **Note:** Accessing the webcam requires a secure connection (HTTPS). Vercel handles this automatically, but if you host it elsewhere, make sure it has an SSL certificate.
+This path requires WebAssembly, workers, OffscreenCanvas, and ImageBitmap. Current
+Chromium was tested. Unsupported browsers can use pointer controls. CPU inference
+speed varies by device; there is no measured claim of faster inference than the
+previous MediaPipe Tasks implementation. Worker inference keeps that CPU work
+off the rendering thread. Physical webcam sessions and mobile hardware still
+need broader testing.
 
----
+The classifier declares a dynamic batch signature even though its stored shape
+is batch one. `shared/tflite-batch.js` specializes only those batch dimensions
+before LiteRT compilation. It rejects other dynamic dimensions and does not
+change model weights. See [third-party references](THIRD_PARTY_NOTICES.md).
 
-## 🎵 Customizing Music (`Starri Motion`)
+## Tests
 
-You can easily add your own music:
-1. Place standard `.mp3`, `.ogg`, or `.wav` audio files into the `assets/music/` directory.
-2. Edit `assets/music/tracks.json` to register the new tracks:
-   ```json
-   {
-     "tracks": [
-       { "name": "My Song", "file": "my-song.mp3" }
-     ]
-   }
-   ```
+```sh
+bunx playwright install chromium
+bun run test
+```
 
----
+Unit tests cover pause clocks, frame-rate independence, hockey collision/goal
+rules, swept fruit collisions, gesture targets, rhythm misses, calibration,
+coordinate conversion, hand-model geometry, and model shape specialization.
+Desktop and phone browser tests exercise all six games, start/pause/restart,
+camera denial, late initialization, focus loss, and history recovery. These
+checks block external services or mock the camera model so CI is deterministic.
+GitHub Actions runs them for pull requests and main.
 
-## 📄 License
+An optional real inference check downloads the pinned runtime/model and official
+reference images, detects two hands, validates finite landmark coordinates, and
+recognizes a closed fist. A second check feeds a real video track through the
+game's worker pipeline and verifies that switching controls stops the stream:
 
-This project is licensed under the MIT License. Feel free to use and modify it!
+```sh
+bun run test:vision
+```
+
+This test requires network access and is separate from ordinary CI. The fixture
+checks do not replace real-camera playtesting.
+
+## Music
+
+Add `.mp3`, `.ogg`, or `.wav` files to `assets/music/` and register them in
+`assets/music/tracks.json`:
+
+```json
+{
+  "tracks": [
+    { "name": "My song", "file": "my-song.mp3", "bpm": 120, "duration": 45 }
+  ]
+}
+```
+
+Starri continues its game clock if optional music is missing or the browser
+blocks playback.

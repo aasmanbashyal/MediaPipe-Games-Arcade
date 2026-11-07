@@ -6,6 +6,7 @@
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let stars = [];
 let w, h;
 
@@ -70,8 +71,8 @@ function drawStars(time) {
 }
 
 function animate(time) {
-    drawStars(time);
-    requestAnimationFrame(animate);
+    if (!document.hidden) drawStars(time);
+    if (!reducedMotion.matches) requestAnimationFrame(animate);
 }
 
 window.addEventListener('resize', () => { resize(); initStars(); });

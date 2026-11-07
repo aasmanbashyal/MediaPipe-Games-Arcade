@@ -1,3 +1,5 @@
+import { GameClock, segmentTouchesCircle } from '../../shared/gameplay-clock.js';
+import { createGameControls } from '../../shared/game-controls.js';
 import { initHandTracker, detectHands, getPointers, drawSkeleton, drawPointers, GAME_WIDTH, GAME_HEIGHT } from '../../shared/hand-tracker.js';
 import { ParticleSystem } from '../../shared/particles.js';
 import { playSlice, playBomb, playSuccess, resumeAudio } from '../../shared/audio.js';
@@ -19,10 +21,12 @@ const FRUITS = [
     { emoji: '🍑', color: '#ff8a65', splatter: '#ffab91', points: 130 },
 ];
 
-const SWIPE_SPEED_THRESHOLD = 8; // pixels/frame minimum to count as a swipe
+const SWIPE_SPEED_THRESHOLD = 480; // pixels/second minimum to count as a swipe
 
 // ---- STATE ----
 let state = 'menu';
+const clock = new GameClock();
+let frameSeconds = 1 / 60;
 let config = null;
 let fruits = [], score = 0, combo = 0, maxCombo = 0, sliced = 0;
 let gameStartTime = 0, lastSpawnTime = 0;
@@ -73,6 +77,13 @@ const comboBox = document.getElementById('comboBox');
 const comboDisplay = document.getElementById('comboDisplay');
 const timerDisplay = document.getElementById('timerDisplay');
 
+const controls = createGameControls({
+    getState: () => state,
+    onPause: () => { clock.pause(); bgAudio.pause(); },
+    onResume: () => { clock.resume(); prevPointers = [{ active: false }, { active: false }]; if (bgAudio.src) bgAudio.play().catch(() => {}); },
+    onRestart: () => { clock.resume(); startGame(config || CONFIGS[Object.keys(CONFIGS)[0]]); },
+});
+
 // ---- INIT ----
 statusText.innerText = "Loading AI...";
 diffSelect.style.display = 'none';
@@ -104,9 +115,11 @@ document.getElementById('playAgainBtn')?.addEventListener('click', () => {
 });
 
 function startGame(cfg) {
+    clock.resume(); clock.resetFrame();
     config = cfg; score = 0; combo = 0; maxCombo = 0; sliced = 0;
-    fruits = []; particles.clear(); comboResetTimer = 0;
-    gameStartTime = performance.now(); lastSpawnTime = 0;
+    fruits = []; particles.clear(); comboResetTimer = 0; comboBox.style.opacity = 0;
+    prevPointers = [{ active: false }, { active: false }];
+    gameStartTime = clock.now(); lastSpawnTime = 0;
     trails = [[], []];
     updateHUD();
     uiOverlay.style.display = 'none'; hudOverlay.style.display = 'block';
@@ -127,20 +140,23 @@ function endGame() {
 
 // ---- MAIN LOOP ----
 function mainLoop() {
+    document.body.dataset.gameState = state; controls.update();
+    frameSeconds = clock.frame();
+    if (clock.paused) { requestAnimationFrame(mainLoop); return; }
     detectHands();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
     drawSkeleton(miniCtx, miniCanvas.width, miniCanvas.height);
 
     if (state === 'playing') {
-        const elapsed = (performance.now() - gameStartTime) / 1000;
+        const elapsed = (clock.now() - gameStartTime) / 1000;
         const remaining = Math.max(0, config.duration - elapsed);
         timerDisplay.innerText = Math.ceil(remaining);
 
         if (remaining <= 0) { endGame(); } else {
             bg.draw(ctx, canvas.width, canvas.height);
             spawnFruits(elapsed);
-            updateFruits();
+            updateFruits(frameSeconds);
             updateTrails();
             checkSlices();
             drawFruits();
@@ -148,7 +164,7 @@ function mainLoop() {
             particles.draw(ctx);
             drawPointers(ctx, canvas.width, canvas.height);
 
-            if (combo > 0 && performance.now() - comboResetTimer > 2000) {
+            if (combo > 0 && clock.now() - comboResetTimer > 2000) {
                 combo = 0; comboBox.style.opacity = 0;
             }
         }
@@ -159,7 +175,7 @@ function mainLoop() {
     // Store previous pointer positions for velocity calculation
     const ptrs = getPointers();
     ptrs.forEach((p, i) => {
-        prevPointers[i] = { x: p.x, y: p.y, active: p.active };
+        prevPointers[i] = { x: p.x, y: p.y, active: p.active, sampleTime: p.sampleTime };
     });
 
     requestAnimationFrame(mainLoop);
@@ -207,14 +223,15 @@ function spawnFruits(elapsed) {
     }
 }
 
-function updateFruits() {
+function updateFruits(seconds) {
+    const frames = seconds * 60;
     const h = canvas.height;
     for (let i = fruits.length - 1; i >= 0; i--) {
         const f = fruits[i];
-        f.x += f.vx;
-        f.y += f.vy;
-        f.vy += 0.35; // gravity
-        f.rotation += f.rotSpeed;
+        f.x += f.vx * frames;
+        f.y += f.vy * frames + 0.175 * frames * frames;
+        f.vy += 0.35 * frames; // gravity
+        f.rotation += f.rotSpeed * frames;
         // Remove if fallen off screen
         if (f.y > h + 80) { fruits.splice(i, 1); }
     }
@@ -226,7 +243,7 @@ function updateTrails() {
     const w = canvas.width, h = canvas.height;
     ptrs.forEach((p, i) => {
         if (p.active) {
-            trails[i].push({ x: p.x * w, y: p.y * h, t: performance.now() });
+            trails[i].push({ x: p.x * w, y: p.y * h, t: clock.now() });
             // Keep last 15 positions
             if (trails[i].length > 15) trails[i].shift();
         } else {
@@ -243,7 +260,11 @@ function getSwipeSpeed(pointerIdx) {
     if (!cur.active || !prev.active) return 0;
     const dx = (cur.x - prev.x) * w;
     const dy = (cur.y - prev.y) * h;
-    return Math.sqrt(dx * dx + dy * dy);
+    // Camera samples can arrive at 30 Hz while the display renders at 144 Hz.
+    // Use the input interval rather than inflating velocity on that one RAF.
+    const seconds = Number.isFinite(cur.sampleTime) && Number.isFinite(prev.sampleTime)
+        ? (cur.sampleTime - prev.sampleTime) / 1000 : frameSeconds;
+    return seconds > 0 ? Math.hypot(dx, dy) / seconds : 0;
 }
 
 function checkSlices() {
@@ -261,10 +282,7 @@ function checkSlices() {
         for (let i = fruits.length - 1; i >= 0; i--) {
             const f = fruits[i];
             if (!f.alive) continue;
-            const dx = px - f.x, dy = py - f.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < f.r + 25) {
+            if (segmentTouchesCircle({ x: prevPointers[pi].x * w, y: prevPointers[pi].y * h }, { x: px, y: py }, f, 25)) {
                 f.alive = false;
                 fruits.splice(i, 1);
 
@@ -281,7 +299,7 @@ function checkSlices() {
                     // Fruit sliced!
                     sliced++;
                     combo++;
-                    comboResetTimer = performance.now();
+                    comboResetTimer = clock.now();
                     if (combo > maxCombo) maxCombo = combo;
 
                     let points = f.points || 100;
@@ -358,7 +376,7 @@ function drawTrails() {
     const colors = ['#ff6ec7', '#00e5ff'];
     trails.forEach((trail, idx) => {
         if (trail.length < 2) return;
-        const now = performance.now();
+        const now = clock.now();
         ctx.save();
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';

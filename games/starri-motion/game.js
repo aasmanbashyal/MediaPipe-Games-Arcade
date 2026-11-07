@@ -1,3 +1,5 @@
+import { GameClock } from '../../shared/gameplay-clock.js';
+import { createGameControls } from '../../shared/game-controls.js';
 import { initHandTracker, detectHands, getPointers, drawSkeleton, drawPointers, GAME_WIDTH, GAME_HEIGHT } from '../../shared/hand-tracker.js';
 import { ParticleSystem } from '../../shared/particles.js';
 import { playPop, playMiss, playSuccess, playTick, resumeAudio, MusicManager } from '../../shared/audio.js';
@@ -25,8 +27,10 @@ const STATE = { MENU: 'menu', CALIBRATING: 'calibrating', COUNTDOWN: 'countdown'
 
 // ---- GAME VARIABLES ----
 let gameState = STATE.MENU;
+const clock = new GameClock();
+let sessionGeneration = 0;
 let currentLevel = null, selectedLevelId = null;
-let beatmap = [], activeNoteStartIndex = 0, gameStartTime = 0, useFallbackTimer = false;
+let beatmap = [], activeNoteStartIndex = 0, gameStartTime = 0;
 let calibrationProgress = 0, calibrationStartTime = 0;
 const CALIBRATION_NEEDED = 2.0;
 let countdownValue = 3, countdownStartTime = 0;
@@ -79,6 +83,13 @@ async function loadTrackList() {
     }
 }
 
+const controls = createGameControls({
+    getState: () => gameState,
+    onPause: () => { clock.pause(); music.pause(); },
+    onResume: () => { clock.resume(); if (gameState === STATE.PLAYING) music.play().catch(() => {}); },
+    onRestart: () => { clock.resume(); music.stop(); sessionGeneration++; enterCalibration(); },
+});
+
 // ---- INIT ----
 statusText.innerText = "Loading AI...";
 levelSelect.style.display = 'none';
@@ -118,33 +129,52 @@ document.getElementById('playAgainBtn')?.addEventListener('click', () => {
 
 // ---- CALIBRATION ----
 function enterCalibration() {
+    clock.resetFrame();
     gameState = STATE.CALIBRATING; calibrationProgress = 0; calibrationStartTime = 0;
     uiOverlay.style.display = 'none'; calibrationOverlay.style.display = 'flex';
     hudOverlay.style.display = 'none'; countdownDisplay.style.display = 'none';
     calibrationTitle.innerText = 'GET READY';
-    calibrationHint.innerText = 'Place your hand in the circle';
+    calibrationHint.innerText = document.body.dataset.inputMode === 'pointer'
+        ? 'Hold your pointer in the circle for 2 seconds. On touchscreens, press and hold.'
+        : 'Hold either hand in the circle for 2 seconds.';
     calibrationHint.style.display = 'block';
     calibrationRingCanvas.style.display = 'block';
+    positionCalibrationRing();
+}
+
+function positionCalibrationRing() {
+    const rect = canvasElement.getBoundingClientRect();
+    // The visual target and hit area share screen geometry, including the
+    // letterboxed playfield and its mirror. Keep the target usable on phones.
+    const geometry = {
+        x: rect.left + (1 - PLAY_ZONE.cx) * rect.width,
+        y: rect.top + PLAY_ZONE.cy * rect.height,
+        size: Math.min(200, Math.max(120, rect.height * 0.7)),
+        rect,
+    };
+    calibrationOverlay.style.setProperty('--calibration-x', geometry.x + 'px');
+    calibrationOverlay.style.setProperty('--calibration-y', geometry.y + 'px');
+    calibrationOverlay.style.setProperty('--calibration-size', geometry.size + 'px');
+    return geometry;
 }
 
 function updateCalibration() {
-    const w = canvasElement.width, h = canvasElement.height;
-    const cx = PLAY_ZONE.cx * w, cy = PLAY_ZONE.cy * h;
-    const detectRadius = 100;
+    const target = positionCalibrationRing();
+    const detectRadius = target.size * 0.4; // Matches the 80px radius in the 200px ring canvas.
     const pointers = getPointers();
     let handInZone = false;
     for (const p of pointers) {
         if (!p.active) continue;
-        const dx = p.x * w - cx, dy = p.y * h - cy;
+        const dx = target.rect.left + (1 - p.x) * target.rect.width - target.x;
+        const dy = target.rect.top + p.y * target.rect.height - target.y;
         if (Math.sqrt(dx * dx + dy * dy) < detectRadius) { handInZone = true; break; }
     }
     if (handInZone) {
-        if (calibrationStartTime === 0) calibrationStartTime = performance.now();
-        calibrationProgress = Math.min(1, (performance.now() - calibrationStartTime) / (CALIBRATION_NEEDED * 1000));
+        if (calibrationStartTime === 0) calibrationStartTime = clock.now();
+        calibrationProgress = Math.min(1, (clock.now() - calibrationStartTime) / (CALIBRATION_NEEDED * 1000));
         if (calibrationProgress >= 1) { enterCountdown(); return; }
     } else {
-        calibrationProgress = Math.max(0, calibrationProgress - 0.02);
-        if (calibrationProgress < 0.1) calibrationStartTime = 0;
+        calibrationProgress = 0; calibrationStartTime = 0;
     }
     drawCalibrationRing(calibrationProgress, handInZone);
 }
@@ -168,13 +198,14 @@ function drawCalibrationRing(progress, active) {
 
 // ---- COUNTDOWN ----
 function enterCountdown() {
-    gameState = STATE.COUNTDOWN; countdownValue = 3; countdownStartTime = performance.now();
+    gameState = STATE.COUNTDOWN; countdownValue = 3; countdownStartTime = clock.now();
     calibrationHint.style.display = 'none'; calibrationRingCanvas.style.display = 'none';
     calibrationTitle.innerText = ''; countdownDisplay.style.display = 'block'; countdownDisplay.innerText = '3';
 }
 
 function updateCountdown() {
-    const elapsed = (performance.now() - countdownStartTime) / 1000;
+    positionCalibrationRing();
+    const elapsed = (clock.now() - countdownStartTime) / 1000;
     const newVal = 3 - Math.floor(elapsed);
     if (newVal !== countdownValue && newVal > 0) {
         countdownValue = newVal; countdownDisplay.innerText = String(countdownValue);
@@ -205,9 +236,10 @@ function generateBeatmap(levelId) {
 
 // ---- GAME SESSION ----
 async function startGameSession() {
+    const generation = ++sessionGeneration;
     gameState = STATE.PLAYING; beatmap = generateBeatmap(selectedLevelId); activeNoteStartIndex = 0;
     score = 0; combo = 0; maxCombo = 0; perfectCount = 0; greatCount = 0; goodCount = 0; missCount = 0;
-    particles.clear(); updateHUD(); gameStartTime = performance.now(); useFallbackTimer = true;
+    particles.clear(); updateHUD(); gameStartTime = clock.now();
     calibrationOverlay.style.display = 'none'; uiOverlay.style.display = 'none'; hudOverlay.style.display = 'block';
 
     // Try loading a music track
@@ -216,17 +248,17 @@ async function startGameSession() {
         const track = availableTracks[selectedTrackIdx];
         try {
             await music.loadTrack('../../assets/music/' + track.file);
+            if (generation !== sessionGeneration || gameState !== STATE.PLAYING) return;
             music.currentTime = 0;
-            await music.play();
-            useFallbackTimer = false;
-            music.onEnded = () => endGameSession();
+            if (!clock.paused) await music.play();
         } catch {
-            useFallbackTimer = true;
+            // Music is optional; the active game clock continues without it.
         }
     }
 }
 
 function endGameSession() {
+    sessionGeneration++;
     gameState = STATE.RESULTS; hudOverlay.style.display = 'none'; uiOverlay.style.display = 'flex';
     screenTitle.innerText = 'STAGE CLEARED'; taglineText.style.display = 'none';
     levelSelect.style.display = 'none'; statusText.style.display = 'none'; resultsPanel.style.display = 'block';
@@ -244,7 +276,7 @@ function endGameSession() {
 }
 
 function getCurrentGameTime() {
-    return useFallbackTimer ? (performance.now() - gameStartTime) / 1000 : music.currentTime;
+    return (clock.now() - gameStartTime) / 1000;
 }
 
 // ---- HIT DETECTION ----
@@ -326,6 +358,9 @@ function updateProgress(currentTime) {
 
 // ---- MAIN LOOP ----
 function mainLoop() {
+    document.body.dataset.gameState = gameState; controls.update();
+    clock.frame();
+    if (clock.paused) { requestAnimationFrame(mainLoop); return; }
     detectHands();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
@@ -333,12 +368,12 @@ function mainLoop() {
 
     switch (gameState) {
         case STATE.MENU: case STATE.RESULTS:
-            drawDynamicBackground(performance.now() / 1000); break;
+            drawDynamicBackground(clock.now() / 1000); break;
         case STATE.CALIBRATING:
-            drawDynamicBackground(performance.now() / 1000); drawPlayZoneOutline();
+            drawDynamicBackground(clock.now() / 1000); drawPlayZoneOutline();
             drawPointers(canvasCtx, canvasElement.width, canvasElement.height); updateCalibration(); break;
         case STATE.COUNTDOWN:
-            drawDynamicBackground(performance.now() / 1000); drawPlayZoneOutline();
+            drawDynamicBackground(clock.now() / 1000); drawPlayZoneOutline();
             drawPointers(canvasCtx, canvasElement.width, canvasElement.height); updateCountdown(); break;
         case STATE.PLAYING: renderGameFrame(); break;
     }
@@ -367,7 +402,7 @@ function drawPlayZoneOutline() {
 }
 
 function drawTargetZones() {
-    if (!currentLevel) return; const ctx = canvasCtx; const time = performance.now() / 1000;
+    if (!currentLevel) return; const ctx = canvasCtx; const time = clock.now() / 1000;
     currentLevel.directions.forEach(dir => {
         const target = getTargetPosition(dir); const color = ARROW_COLORS[dir];
         const r = 35 + Math.sin(time * 2) * 3;
@@ -380,7 +415,7 @@ function drawTargetZones() {
 }
 
 function advanceNotePointer(ct) {
-    while (activeNoteStartIndex < beatmap.length && (beatmap[activeNoteStartIndex].hit || beatmap[activeNoteStartIndex].missed || beatmap[activeNoteStartIndex].time < ct - (currentLevel?.hitWindow || 0.45)))
+    while (activeNoteStartIndex < beatmap.length && (beatmap[activeNoteStartIndex].hit || beatmap[activeNoteStartIndex].missed))
         activeNoteStartIndex++;
 }
 
